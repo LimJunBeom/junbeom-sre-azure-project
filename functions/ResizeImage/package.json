@@ -1,0 +1,20 @@
+{
+    "name": "resize-image-function",
+    "version": "1.0.0",
+    "description": "Azure Function for resizing uploaded images",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "sharp": "^0.32.6"
+    },
+    "devDependencies": {},
+    "keywords": [
+        "azure-functions",
+        "image-processing",
+        "thumbnail"
+    ],
+    "author": "",
+    "license": "MIT"
+}

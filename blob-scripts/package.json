@@ -1,0 +1,23 @@
+{
+    "name": "blob-upload-scripts",
+    "version": "1.0.0",
+    "description": "Scripts for uploading and testing images in Azure Blob Storage",
+    "main": "upload-test.js",
+    "scripts": {
+        "upload": "node upload-test.js upload",
+        "list": "node upload-test.js list",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "@azure/storage-blob": "^12.17.0"
+    },
+    "devDependencies": {},
+    "keywords": [
+        "azure",
+        "blob-storage",
+        "image-upload",
+        "testing"
+    ],
+    "author": "",
+    "license": "MIT"
+}

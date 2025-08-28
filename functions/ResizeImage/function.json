@@ -1,0 +1,19 @@
+{
+    "bindings": [
+        {
+            "name": "myBlob",
+            "type": "blobTrigger",
+            "direction": "in",
+            "path": "images/{name}",
+            "connection": "STORAGE_CONNECTION_STRING"
+        },
+        {
+            "name": "outputBlob",
+            "type": "blob",
+            "path": "thumbnails/{name}",
+            "connection": "STORAGE_CONNECTION_STRING",
+            "direction": "out"
+        }
+    ],
+    "disabled": false
+}
