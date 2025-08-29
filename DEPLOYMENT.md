@@ -36,7 +36,17 @@ After successful deployment, note the outputs:
 
 ## Step 3: Deploy Azure Function
 
-### Option A: Using Azure Functions Core Tools
+### Option A: Using Azure Portal (Recommended for Free Tier)
+
+1. Go to Azure Portal
+2. Navigate to your Function App
+3. Go to "Deployment Center"
+4. Choose "GitHub" as source
+5. Connect your GitHub repository
+6. Set build provider to "GitHub Actions" or "Azure Pipelines"
+7. Deploy
+
+### Option B: Using Azure Functions Core Tools
 
 ```bash
 # Install Azure Functions Core Tools
@@ -52,22 +62,13 @@ npm install
 func azure functionapp publish <function-app-name>
 ```
 
-### Option B: Using Azure Portal
+## Step 4: Verify Configuration
 
-1. Go to Azure Portal
-2. Navigate to your Function App
-3. Go to "Deployment Center"
-4. Set up GitHub integration or use ZIP deployment
-
-## Step 4: Configure Environment Variables
-
-In Azure Portal, go to your Function App > Configuration and add:
-
-```
-STORAGE_CONNECTION_STRING=<your-storage-connection-string>
-THUMBNAIL_CONTAINER=thumbnails
-IMAGE_CONTAINER=images
-```
+The Function App should have these app settings (automatically set by Terraform):
+- `AzureWebJobsStorage` - Storage connection string
+- `SCM_DO_BUILD_DURING_DEPLOYMENT` - "true" (for sharp library)
+- `FUNCTIONS_EXTENSION_VERSION` - "~4"
+- `WEBSITE_RUN_FROM_PACKAGE` - "1"
 
 ## Step 5: Test the Setup
 
@@ -85,6 +86,9 @@ node upload-test.js upload <path-to-test-image>
 
 # List uploaded images
 node upload-test.js list
+
+# List generated thumbnails
+node upload-test.js thumbnails
 ```
 
 ## Step 6: Monitor and Verify
@@ -95,17 +99,23 @@ node upload-test.js list
 
 ## Cost Optimization Tips
 
-1. **Use Consumption Plan**: Already configured for free tier
+1. **Use Consumption Plan**: Already configured for free tier (Y1)
 2. **Monitor Usage**: Check Azure Cost Management regularly
 3. **Set Budget Alerts**: Configure spending limits
 4. **Clean Up**: Delete unused resources when not needed
+
+## Free Tier Limits
+
+- **Azure Functions**: 1 million executions per month free
+- **Blob Storage**: 5GB free for 12 months
+- **Region**: East US (configured)
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Function not triggering**: Check blob trigger path and connection string
-2. **Sharp library errors**: Ensure Node.js version compatibility
+1. **Function not triggering**: Check blob trigger path and AzureWebJobsStorage connection
+2. **Sharp library errors**: Ensure SCM_DO_BUILD_DURING_DEPLOYMENT=true is set
 3. **Permission errors**: Verify managed identity role assignments
 4. **Storage access issues**: Check container access policies
 
@@ -120,6 +130,22 @@ az functionapp config appsettings list --name <function-app-name> --resource-gro
 
 # Update function app settings
 az functionapp config appsettings set --name <function-app-name> --resource-group <resource-group-name> --settings "SETTING_NAME=VALUE"
+```
+
+## Local Development
+
+For local testing with Azurite (free storage emulator):
+
+```bash
+# Install Azurite
+npm install -g azurite
+
+# Start Azurite
+azurite
+
+# In another terminal, test locally
+cd functions
+func start
 ```
 
 ## Cleanup

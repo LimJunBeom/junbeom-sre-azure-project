@@ -11,6 +11,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Azure Functions local settings
+local.settings.json
+
 # Terraform
 .terraform/
 *.tfstate

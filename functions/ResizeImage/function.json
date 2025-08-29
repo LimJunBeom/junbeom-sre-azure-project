@@ -5,14 +5,14 @@
             "type": "blobTrigger",
             "direction": "in",
             "path": "images/{name}",
-            "connection": "STORAGE_CONNECTION_STRING"
+            "connection": "AzureWebJobsStorage"
         },
         {
             "name": "outputBlob",
             "type": "blob",
+            "direction": "out",
             "path": "thumbnails/{name}",
-            "connection": "STORAGE_CONNECTION_STRING",
-            "direction": "out"
+            "connection": "AzureWebJobsStorage"
         }
     ],
     "disabled": false

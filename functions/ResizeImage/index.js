@@ -1,51 +1,42 @@
-const sharp = require('sharp');
-
-module.exports = async function (context, myBlob, outputBlob) {
-    context.log('JavaScript blob trigger function processed blob \n Name:', context.bindingData.name, '\n Blob Size:', myBlob.length, 'Bytes');
+module.exports = async function (context, myBlob) {
+    context.log(`Blob processed: ${context.bindingData.name}, size: ${myBlob.length} bytes`);
 
     try {
-        // 이미지 리사이징 설정
-        const thumbnailWidth = 200;
-        const thumbnailHeight = 200;
-        const quality = 80;
+        const sharp = require('sharp');
 
-        // Sharp를 사용하여 이미지 리사이징
-        const resizedImageBuffer = await sharp(myBlob)
-            .resize(thumbnailWidth, thumbnailHeight, {
-                fit: 'inside', // 비율 유지하면서 크기 조정
-                withoutEnlargement: true // 원본보다 크게 만들지 않음
+        // 이미지 리사이징 (200x200, JPEG, 품질 80%)
+        const resized = await sharp(myBlob)
+            .resize(200, 200, {
+                fit: 'inside',
+                withoutEnlargement: true
             })
-            .jpeg({ quality: quality }) // JPEG 형식으로 변환
+            .jpeg({ quality: 80 })
             .toBuffer();
 
-        // 리사이징된 이미지를 출력 blob에 저장
-        outputBlob = resizedImageBuffer;
+        // output binding으로 썸네일 쓰기
+        context.bindings.outputBlob = resized;
 
         // 성공 로그
         context.log(`Successfully created thumbnail for ${context.bindingData.name}`);
-        context.log(`Original size: ${myBlob.length} bytes, Thumbnail size: ${resizedImageBuffer.length} bytes`);
+        context.log(`Original size: ${myBlob.length} bytes, Thumbnail size: ${resized.length} bytes`);
 
         // 응답 메시지 설정
         context.res = {
             status: 200,
             body: {
-                message: "Thumbnail created successfully",
-                originalFile: context.bindingData.name,
-                thumbnailFile: context.bindingData.name,
+                name: context.bindingData.name,
+                container: 'thumbnails',
                 originalSize: myBlob.length,
-                thumbnailSize: resizedImageBuffer.length,
-                thumbnailUrl: `https://${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net/thumbnails/${context.bindingData.name}`
+                thumbnailSize: resized.length
             }
         };
 
-    } catch (error) {
-        // 에러 처리
-        context.log.error('Error processing image:', error);
+    } catch (err) {
+        context.log.error('Error processing image:', err);
         context.res = {
             status: 500,
             body: {
-                message: "Error creating thumbnail",
-                error: error.message,
+                error: err.message,
                 originalFile: context.bindingData.name
             }
         };

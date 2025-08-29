@@ -28,7 +28,7 @@ resource "azurerm_storage_account" "main" {
   account_replication_type = "LRS"
   account_kind             = "StorageV2"
   
-  # Enable blob public access for demo purposes (consider disabling for production)
+  # Disable public access for security
   allow_nested_items_to_be_public = false
   
   tags = var.tags
@@ -71,17 +71,18 @@ resource "azurerm_linux_function_app" "main" {
   site_config {
     application_stack {
       node {
-        version = "18"
+        version = "~18"
       }
     }
   }
   
   app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME" = "node"
-    "WEBSITE_NODE_DEFAULT_VERSION" = "~18"
-    "STORAGE_CONNECTION_STRING" = azurerm_storage_account.main.primary_connection_string
-    "THUMBNAIL_CONTAINER" = azurerm_storage_container.thumbnails.name
-    "IMAGE_CONTAINER" = azurerm_storage_container.images.name
+    "AzureWebJobsStorage"              = azurerm_storage_account.main.primary_connection_string
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"   = "true"
+    "FUNCTIONS_EXTENSION_VERSION"      = "~4"
+    "WEBSITE_RUN_FROM_PACKAGE"         = "1"
+    "FUNCTIONS_WORKER_RUNTIME"         = "node"
+    "WEBSITE_NODE_DEFAULT_VERSION"     = "~18"
   }
   
   tags = var.tags
@@ -94,19 +95,6 @@ resource "azurerm_user_assigned_identity" "function" {
   location            = azurerm_resource_group.main.location
   
   tags = var.tags
-}
-
-# Assign managed identity to function app
-resource "azurerm_linux_function_app_slot" "main" {
-  name                       = "production"
-  function_app_id            = azurerm_linux_function_app.main.id
-  storage_account_name       = azurerm_storage_account.main.name
-  storage_account_access_key = azurerm_storage_account.main.primary_access_key
-  
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.function.id]
-  }
 }
 
 # Role assignment for storage access

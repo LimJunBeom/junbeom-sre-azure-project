@@ -2,8 +2,8 @@ const { BlobServiceClient } = require('@azure/storage-blob');
 const fs = require('fs');
 const path = require('path');
 
-// 환경 변수에서 연결 문자열 가져오기 (실제 배포 시에는 Azure Key Vault 사용 권장)
-const connectionString = process.env.STORAGE_CONNECTION_STRING;
+// 환경 변수에서 연결 문자열 가져오기
+const connectionString = process.env.STORAGE_CONNECTION_STRING || process.env.AzureWebJobsStorage;
 const containerName = 'images';
 
 async function uploadImage(filePath) {
@@ -11,6 +11,9 @@ async function uploadImage(filePath) {
         // Blob Service Client 생성
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
         const containerClient = blobServiceClient.getContainerClient(containerName);
+
+        // 컨테이너가 없으면 생성
+        await containerClient.createIfNotExists();
 
         // 파일명 추출
         const fileName = path.basename(filePath);
@@ -74,13 +77,27 @@ async function listImages() {
     }
 }
 
+async function listThumbnails() {
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+        const containerClient = blobServiceClient.getContainerClient('thumbnails');
+
+        console.log('Listing thumbnails in container:');
+        for await (const blob of containerClient.listBlobsFlat()) {
+            console.log(`- ${blob.name} (${blob.properties.contentLength} bytes)`);
+        }
+    } catch (error) {
+        console.error('Error listing thumbnails:', error);
+    }
+}
+
 // 메인 실행 함수
 async function main() {
     const args = process.argv.slice(2);
     const command = args[0];
 
     if (!connectionString) {
-        console.error('STORAGE_CONNECTION_STRING environment variable is required');
+        console.error('STORAGE_CONNECTION_STRING or AzureWebJobsStorage environment variable is required');
         process.exit(1);
     }
 
@@ -102,10 +119,15 @@ async function main() {
             await listImages();
             break;
 
+        case 'thumbnails':
+            await listThumbnails();
+            break;
+
         default:
             console.log('Usage:');
             console.log('  node upload-test.js upload <image-file-path>  - Upload an image');
             console.log('  node upload-test.js list                      - List all images');
+            console.log('  node upload-test.js thumbnails                - List all thumbnails');
             break;
     }
 }
@@ -117,5 +139,6 @@ if (require.main === module) {
 
 module.exports = {
     uploadImage,
-    listImages
+    listImages,
+    listThumbnails
 };
